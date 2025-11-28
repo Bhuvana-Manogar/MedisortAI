@@ -1,7 +1,7 @@
-MediSort AI – Smart Medical Waste Classification
+# MediSort AI – Smart Medical Waste Classification
 
-An AI-powered system for real-time biomedical waste detection and classification in hospitals.
-Data is processed with Python (TensorFlow/Keras, OpenCV) and visualized via Streamlit for an interactive web interface.
+### An AI-powered system for real-time biomedical waste detection and classification in hospitals.
+## Data is processed with Python (TensorFlow/Keras, OpenCV) and visualized via Streamlit for an interactive web interface.
 
 <img width="1000" height="429" alt="MediSort Output" src="assets/output_placeholder.png" />
 Overview
