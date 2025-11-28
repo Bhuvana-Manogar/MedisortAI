@@ -36,6 +36,113 @@ It automatically detects and categorizes medical waste into:
 4. **Output:** Display classification with **confidence score** and alerts if hazardous.  
 
 ---
+## Program
+```python
+import streamlit as st
+import cv2
+from PIL import Image
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import os
+
+st.title("Medical Waste Classification (Live Camera)")
+
+# Path to dataset
+DATASET_PATH = r"C:\Users\admin\OneDrive\Desktop\project\Dataset"
+
+# Check if model exists; if not, train it quickly using transfer learning
+MODEL_PATH = "medical_waste_model.h5"
+
+# Function to create & train the model
+def train_model():
+    st.write("Training model on dataset...")
+    datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
+    
+    train_gen = datagen.flow_from_directory(
+        DATASET_PATH,
+        target_size=(224, 224),
+        batch_size=16,
+        class_mode='categorical',
+        subset='training'
+    )
+    
+    val_gen = datagen.flow_from_directory(
+        DATASET_PATH,
+        target_size=(224, 224),
+        batch_size=16,
+        class_mode='categorical',
+        subset='validation'
+    )
+    
+    base_model = tf.keras.applications.MobileNetV2(input_shape=(224,224,3),
+                                                   include_top=False,
+                                                   weights='imagenet')
+    base_model.trainable = False
+    
+    model = tf.keras.Sequential([
+        base_model,
+        tf.keras.layers.GlobalAveragePooling2D(),
+        tf.keras.layers.Dense(train_gen.num_classes, activation='softmax')
+    ])
+    
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    
+    model.fit(train_gen, validation_data=val_gen, epochs=5)
+    model.save(MODEL_PATH)
+    return model, train_gen.class_indices
+
+# Load or train model
+if os.path.exists(MODEL_PATH):
+    model = load_model(MODEL_PATH)
+    # get class indices
+    datagen = ImageDataGenerator(rescale=1./255)
+    temp_gen = datagen.flow_from_directory(
+        DATASET_PATH,
+        target_size=(224,224),
+        batch_size=16,
+        class_mode='categorical'
+    )
+    class_indices = temp_gen.class_indices
+else:
+    model, class_indices = train_model()
+
+# Reverse class index to get label names
+class_labels = {v:k for k,v in class_indices.items()}
+
+# Webcam capture
+run = st.checkbox('Start Camera')
+FRAME_WINDOW = st.image([])
+
+cap = cv2.VideoCapture(0)
+
+while run:
+    ret, frame = cap.read()
+    if not ret:
+        st.write("Failed to grab frame")
+        break
+    
+    # Convert to RGB
+    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    FRAME_WINDOW.image(img)
+    
+    # Preprocess frame
+    img_resized = cv2.resize(img, (224,224))
+    img_array = np.expand_dims(img_resized/255.0, axis=0)
+    
+    # Prediction
+    preds = model.predict(img_array)
+    label = class_labels[np.argmax(preds)]
+    confidence = np.max(preds)
+    
+    st.write(f"Prediction: {label} ({confidence*100:.2f}%)")
+
+cap.release()
+```
+---
 
 ## 📸 Sample Output
 <img width="1170" height="605" alt="image" src="https://github.com/user-attachments/assets/804a8e18-cb61-470c-9432-aa9775cf88a5" />
