@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Datasets & Large Archives
+MedBin_dataset.v7i.multiclass/
+MedBin_dataset.v7i.multiclass.zip
+data/
+*.zip
+*.tar.gz
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# VS Code & IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
